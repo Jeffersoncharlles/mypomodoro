@@ -1,15 +1,15 @@
 import { ButtonContainer, ButtonVariant } from './styles'
-import { HTMLAttributes } from 'react'
+import { HTMLAttributes, ReactNode } from 'react'
 
 interface Props extends HTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
-  title: string
+  children: ReactNode
 }
 
-export const Button = ({ variant = 'primary', title, ...rest }: Props) => {
+export const Button = ({ variant = 'primary', children, ...rest }: Props) => {
   return (
     <ButtonContainer {...rest} variant={variant}>
-      {title}
+      {children}
     </ButtonContainer>
   )
 }
