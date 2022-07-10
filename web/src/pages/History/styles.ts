@@ -61,3 +61,30 @@ export const HistoryList = styled.div`
     }
   }
 `
+
+const STATUS_COLORS = {
+  yellow: 'yellow-500',
+  red: 'red-500',
+  green: 'green-500',
+} as const
+// as const dizendo para o typescript que o valor nao vai mudar
+
+interface StatusProps {
+  statusColor: keyof typeof STATUS_COLORS
+  // AS CORES NOME SAO A KEY DO STATUS COLORS
+}
+
+export const Status = styled.span<StatusProps>`
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+
+  &::before {
+    content: '';
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: ${(props) => props.theme[STATUS_COLORS[props.statusColor]]};
+    //caso especifico desconstruir pode dar error
+  }
+`
