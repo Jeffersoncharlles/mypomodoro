@@ -11,6 +11,7 @@ import { Play } from 'phosphor-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as zod from 'zod'
+import { useState } from 'react'
 
 /**
  * controller = manter em tempo real o state dentro do estado
@@ -38,7 +39,16 @@ const newCycleFormValidationSchema = zod.object({
 
 type NewCycleFormData = zod.infer<typeof newCycleFormValidationSchema> // type of e para usar uma variável javascript
 
+interface Cycle {
+  id: string
+  task: string
+  minutesAmount: number
+}
+
 export const Home = () => {
+  const [cycles, setCycles] = useState<Cycle[]>([])
+  const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
+
   const { handleSubmit, register, watch, reset } = useForm<NewCycleFormData>({
     resolver: zodResolver(newCycleFormValidationSchema),
     defaultValues: {
@@ -47,10 +57,28 @@ export const Home = () => {
     },
   })
 
+  const uid = () => {
+    const head = Date.now().toString(36)
+    const tail = String(Math.random().toString(36).slice(2))
+
+    return head + tail
+  }
+
   const handleCreateNewCycle = (data: NewCycleFormData) => {
-    console.log(data)
+    const newCycle: Cycle = {
+      id: uid(),
+      task: data.task,
+      minutesAmount: data.minutesAmount,
+    }
+
+    setCycles((state) => [...state, newCycle]) // sempre que o valor do estado depende do valor anterior pego estado atual e passo ele como function
+    setActiveCycleId(newCycle.id)
     reset()
   }
+
+  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId) // vai procurar o id que seja igual o id do ativado
+
+  console.log(activeCycle)
 
   const isDisabledButton = !watch('task')
 
