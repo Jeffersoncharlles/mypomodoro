@@ -60,6 +60,9 @@ export const HistoryList = styled.div`
       }
     }
   }
+
+  @media screen and (max-width: 400px) {
+  }
 `
 
 const STATUS_COLORS = {
