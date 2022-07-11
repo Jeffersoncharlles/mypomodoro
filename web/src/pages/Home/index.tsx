@@ -48,6 +48,7 @@ interface Cycle {
 export const Home = () => {
   const [cycles, setCycles] = useState<Cycle[]>([])
   const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
+  const [amountSecondsPassed, setAmountSecondsPassed] = useState(0)
 
   const { handleSubmit, register, watch, reset } = useForm<NewCycleFormData>({
     resolver: zodResolver(newCycleFormValidationSchema),
@@ -71,14 +72,35 @@ export const Home = () => {
       minutesAmount: data.minutesAmount,
     }
 
-    setCycles((state) => [...state, newCycle]) // sempre que o valor do estado depende do valor anterior pego estado atual e passo ele como function
+    setCycles((state) => [...state, newCycle])
+    // sempre que o valor do estado depende do valor anterior pego estado atual e passo ele como function
+
     setActiveCycleId(newCycle.id)
     reset()
   }
 
-  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId) // vai procurar o id que seja igual o id do ativado
+  const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
+  // vai procurar o id que seja igual o id do ativado
 
-  console.log(activeCycle)
+  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0
+  // se eu tiver activeCycle vai ser os minutes dela vezes 60
+
+  const currentSeconds = activeCycle ? totalSeconds - amountSecondsPassed : 0
+  // se eu tiver ativo vai ser o total de segundos menos os segundos que ja passou
+
+  const minutesAmount = Math.floor(currentSeconds / 60)
+  // pego o total de segundo e divido por 60
+  // ele arredonda para baixo pq sempre vai ter pq o outro minuto falta sempre alguns segundos para dar
+  // números de minutos que existe nos meus segundos
+
+  const secondsAmount = currentSeconds % 60
+  // pegando os resto dos segundos
+  // quantos segundos sobram que nao cabem em uma divisão
+
+  const minutes = String(minutesAmount).padStart(2, '0')
+  // padStart  = ele preenche uma string ate um tamanho se ela nao tiver eu vou incluir 0 ate completar 2 caracteres
+
+  const seconds = String(secondsAmount).padStart(2, '0')
 
   const isDisabledButton = !watch('task')
 
@@ -114,11 +136,11 @@ export const Home = () => {
         </FormContainer>
 
         <CountdownContainer>
-          <span>0</span>
-          <span>0</span>
+          <span>{minutes[0]}</span>
+          <span>{minutes[1]}</span>
           <Separator>:</Separator>
-          <span>0</span>
-          <span>0</span>
+          <span>{seconds[0]}</span>
+          <span>{seconds[1]}</span>
         </CountdownContainer>
 
         <StartCountDownButton disabled={isDisabledButton} type="submit">
