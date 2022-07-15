@@ -1,4 +1,5 @@
-import { createContext, useState, ReactNode } from 'react'
+import { createContext, useState, ReactNode, useReducer } from 'react'
+import { ActionTypes, cyclesReducers } from '../../reducers/cycles'
 
 interface Cycle {
   id: string
@@ -20,7 +21,6 @@ interface CyclesContextType {
   activeCycleId: string | null
   amountSecondsPassed: number
   markCurrentCycleAsFinished: () => void
-  setCycleActiveId: (id: string | null) => void
   setSecondsPassed: (seconds: number) => void
   interruptCurrentCycle: () => void
   createNewCycle: (data: CreateCycleData) => void
@@ -29,24 +29,25 @@ interface CyclesContextType {
 export const CyclesContext = createContext({} as CyclesContextType)
 
 export const CyclesProvider = ({ children }: { children: ReactNode }) => {
-  const [cycles, setCycles] = useState<Cycle[]>([])
+  const [cyclesState, dispatch] = useReducer(cyclesReducers, {
+    cycles: [],
+    activeCycleId: null,
+  })
+
+  const { activeCycleId, cycles } = cyclesState
+
   const [amountSecondsPassed, setAmountSecondsPassed] = useState(0)
-  const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
 
   const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
   // vai procurar o id que seja igual o id do ativado
   //= ==============================================================================//
   const markCurrentCycleAsFinished = () => {
-    setCycles((states) =>
-      states.map((cycle) => {
-        if (cycle.id === activeCycleId) {
-          // se ciclos id for igual o id do ativo
-          // colocar nele o finishedDate
-          return { ...cycle, finishedDate: new Date() }
-        } else {
-          return cycle
-          // se nao for igual retorna o cycle nao alterando ele
-        }
+    dispatch(
+      dispatch({
+        type: ActionTypes.MARK_CURRENT_CYCLE_AS_FINISHED,
+        payload: {
+          activeCycleId,
+        },
       }),
     )
   }
@@ -55,29 +56,13 @@ export const CyclesProvider = ({ children }: { children: ReactNode }) => {
     setAmountSecondsPassed(seconds)
   }
 
-  const setCycleActiveId = (cycleId: string | null) => {
-    setActiveCycleId(cycleId)
-  }
-
   const interruptCurrentCycle = () => {
-    setCycles(updateCycles(cycles))
-
-    function updateCycles(cycles: Cycle[]) {
-      const result = cycles.map((cycle) => {
-        if (cycle.id === activeCycleId) {
-          // se ciclos id for igual o id do ativo
-          // colocar nele o interruptedDate
-          return { ...cycle, interruptedDate: new Date() }
-        } else {
-          return cycle
-          // se nao for igual retorna o cycle nao alterando ele
-        }
-      })
-
-      return result
-    }
-
-    setCycleActiveId(null)
+    dispatch({
+      type: ActionTypes.INTERRUPT_CURRENT_CYCLE,
+      payload: {
+        activeCycleId,
+      },
+    })
   }
 
   const createNewCycle = (data: CreateCycleData) => {
@@ -95,10 +80,12 @@ export const CyclesProvider = ({ children }: { children: ReactNode }) => {
       startDate: new Date(),
     }
 
-    setCycles((state) => [...state, newCycle])
-    // sempre que o valor do estado depende do valor anterior pego estado atual e passo ele como function
-
-    setCycleActiveId(newCycle.id)
+    dispatch({
+      type: ActionTypes.ADD_NEW_CYCLE,
+      payload: {
+        newCycle,
+      },
+    })
     setSecondsPassed(0) // reset o quando segundos se passaram
   }
   //= ==============================================================================//
@@ -110,7 +97,6 @@ export const CyclesProvider = ({ children }: { children: ReactNode }) => {
         activeCycleId,
         amountSecondsPassed,
         markCurrentCycleAsFinished,
-        setCycleActiveId,
         setSecondsPassed,
         createNewCycle,
         interruptCurrentCycle,
