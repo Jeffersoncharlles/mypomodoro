@@ -1,6 +1,12 @@
-import { createContext, useState, ReactNode, useReducer } from 'react'
+import { differenceInSeconds } from 'date-fns'
 import {
-  ActionTypes,
+  createContext,
+  useState,
+  ReactNode,
+  useReducer,
+  useEffect,
+} from 'react'
+import {
   addNewCycleAction,
   interruptCurrentCycleAction,
   markCurrentCycleAsFinishedAction,
@@ -35,17 +41,38 @@ interface CyclesContextType {
 export const CyclesContext = createContext({} as CyclesContextType)
 
 export const CyclesProvider = ({ children }: { children: ReactNode }) => {
-  const [cyclesState, dispatch] = useReducer(cyclesReducers, {
-    cycles: [],
-    activeCycleId: null,
-  })
-
+  const [cyclesState, dispatch] = useReducer(
+    cyclesReducers,
+    {
+      cycles: [],
+      activeCycleId: null,
+    },
+    () => {
+      const storedStateAsJSON = localStorage.getItem(
+        '@mypomodoro:cycle-state-1.0.0',
+      )
+      if (storedStateAsJSON) {
+        return JSON.parse(storedStateAsJSON)
+      }
+    },
+  )
   const { activeCycleId, cycles } = cyclesState
-
-  const [amountSecondsPassed, setAmountSecondsPassed] = useState(0)
-
   const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
   // vai procurar o id que seja igual o id do ativado
+
+  const [amountSecondsPassed, setAmountSecondsPassed] = useState(() => {
+    if (activeCycle) {
+      return differenceInSeconds(new Date(), new Date(activeCycle.startDate))
+    }
+
+    return 0
+  })
+
+  useEffect(() => {
+    const stateJSON = JSON.stringify(cyclesState)
+    localStorage.setItem('@mypomodoro:cycle-state-1.0.0', stateJSON)
+  }, [cyclesState])
+
   //= ==============================================================================//
   const markCurrentCycleAsFinished = () => {
     dispatch(markCurrentCycleAsFinishedAction())
@@ -78,6 +105,7 @@ export const CyclesProvider = ({ children }: { children: ReactNode }) => {
     setSecondsPassed(0) // reset o quando segundos se passaram
   }
   //= ==============================================================================//
+
   return (
     <CyclesContext.Provider
       value={{
