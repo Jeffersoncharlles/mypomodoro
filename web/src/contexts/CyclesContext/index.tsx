@@ -41,12 +41,14 @@ interface CyclesContextType {
 export const CyclesContext = createContext({} as CyclesContextType)
 
 export const CyclesProvider = ({ children }: { children: ReactNode }) => {
+  const cyclesInitialState = {
+    cycles: [],
+    activeCycleId: null,
+  }
+
   const [cyclesState, dispatch] = useReducer(
     cyclesReducers,
-    {
-      cycles: [],
-      activeCycleId: null,
-    },
+    cyclesInitialState,
     () => {
       const storedStateAsJSON = localStorage.getItem(
         '@mypomodoro:cycle-state-1.0.0',
@@ -54,9 +56,11 @@ export const CyclesProvider = ({ children }: { children: ReactNode }) => {
       if (storedStateAsJSON) {
         return JSON.parse(storedStateAsJSON)
       }
+
+      return cyclesInitialState
     },
   )
-  const { activeCycleId, cycles } = cyclesState
+  const { cycles, activeCycleId } = cyclesState
   const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
   // vai procurar o id que seja igual o id do ativado
 
@@ -67,11 +71,6 @@ export const CyclesProvider = ({ children }: { children: ReactNode }) => {
 
     return 0
   })
-
-  useEffect(() => {
-    const stateJSON = JSON.stringify(cyclesState)
-    localStorage.setItem('@mypomodoro:cycle-state-1.0.0', stateJSON)
-  }, [cyclesState])
 
   //= ==============================================================================//
   const markCurrentCycleAsFinished = () => {
@@ -105,6 +104,11 @@ export const CyclesProvider = ({ children }: { children: ReactNode }) => {
     setSecondsPassed(0) // reset o quando segundos se passaram
   }
   //= ==============================================================================//
+
+  useEffect(() => {
+    const stateJSON = JSON.stringify(cyclesState)
+    localStorage.setItem('@mypomodoro:cycle-state-1.0.0', stateJSON)
+  }, [cyclesState])
 
   return (
     <CyclesContext.Provider
